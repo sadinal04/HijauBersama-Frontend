@@ -1,66 +1,113 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
-import Navbar from "@/components/Navbar"; // sesuaikan path jika berbeda
+import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
-const NotifikasiPage = () => {
-  const notifikasi = [
-    {
-      id: 1,
-      pesan:
-        "✅ Anda telah berhasil menyelesaikan dan diverifikasi dalam Tantangan 'Tanam Pohon di Rumah'. Klik untuk melihat sertifikat Anda.",
-      link: "/sertifikat",
-    },
-    {
-      id: 2,
-      pesan:
-        "📢 Tantangan baru tersedia: 'Kurangi Sampah Plastik'. Ikuti sekarang untuk mendapatkan poin dan sertifikat.",
-      link: "/tantangan",
-    },
-    {
-      id: 3,
-      pesan:
-        "🎉 Foto Anda di Galeri telah mendapatkan lebih dari 10 suka. Terima kasih telah menginspirasi komunitas!",
-      link: "/galeri",
-    },
-    {
-      id: 4,
-      pesan:
-        "📰 Artikel baru: 'Cara Membuat Kompos dari Sampah Dapur'. Baca sekarang untuk menambah wawasan.",
-      link: "/edukasi",
-    },
-  ];
+type Notification = {
+  _id: string;
+  message: string;
+  link: string;
+  createdAt: string;
+  read?: boolean;
+};
+
+export default function NotifikasiPage() {
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const userData = localStorage.getItem("userData");
+        const token = userData ? JSON.parse(userData).token : null;
+
+        if (!token) throw new Error("Harap login terlebih dahulu.");
+
+        const res = await fetch("http://localhost:5000/api/user/notifications", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        // Cek apakah response berformat JSON
+        const contentType = res.headers.get("content-type");
+        if (!res.ok) {
+          if (contentType && contentType.includes("application/json")) {
+            const data = await res.json();
+            throw new Error(data.message || "Gagal memuat notifikasi");
+          } else {
+            // Jika bukan JSON, tampilkan teks sebagai error
+            const text = await res.text();
+            throw new Error(text || "Gagal memuat notifikasi (bukan JSON)");
+          }
+        }
+
+        if (!contentType || !contentType.includes("application/json")) {
+          throw new Error("Response bukan JSON");
+        }
+
+        const data = await res.json();
+
+        // Mengurutkan notifikasi berdasarkan 'createdAt' terbaru
+        const sortedNotifications = data.sort(
+          (a: Notification, b: Notification) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+        setNotifications(sortedNotifications);
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchNotifications();
+  }, []);
+
+  if (loading)
+    return (
+      <div className="min-h-screen flex items-center justify-center text-[#006A71]">
+        Memuat notifikasi...
+      </div>
+    );
+
+  if (error)
+    return (
+      <div className="min-h-screen flex items-center justify-center text-red-600 p-4">
+        <p>{error}</p>
+      </div>
+    );
 
   return (
     <>
       <Navbar />
-      <main className="min-h-screen bg-[#F2EFE7] pt-30 px-4 sm:px-6 lg:px-8">
+      <main className="pt-30 min-h-screen bg-[#F2EFE7] pt-20 px-4 sm:px-6 lg:px-8">
         <section className="max-w-3xl mx-auto bg-white rounded-2xl shadow-md p-8">
           <h1 className="text-3xl font-semibold text-[#006A71] mb-6">Pusat Notifikasi</h1>
-
-          <div className="flex flex-col gap-5">
-            {notifikasi.map((notif, index) => (
-              <Link key={notif.id} href={notif.link}>
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.15, duration: 0.5 }}
-                  className="p-5 bg-[#E1F1F2] border border-[#cde3e5] rounded-xl shadow-sm hover:bg-[#d8edee] transition-colors cursor-pointer"
-                >
-                  <p className="text-[#003D40] text-base sm:text-lg leading-relaxed">
-                    {notif.pesan}
-                  </p>
-                </motion.div>
-              </Link>
-            ))}
-          </div>
+          {notifications.length === 0 ? (
+            <p className="text-gray-600">Tidak ada notifikasi.</p>
+          ) : (
+            <ul className="flex flex-col gap-4">
+              {notifications.map((notif) => (
+                <li key={notif._id}>
+                  <Link href={notif.link}>
+                    <div className="p-4 bg-[#E1F1F2] border border-[#cde3e5] rounded-xl shadow-sm hover:bg-[#d8edee] cursor-pointer">
+                      <p className="text-[#003D40] text-base sm:text-lg leading-relaxed">
+                        {notif.message}
+                      </p>
+                      <small className="text-gray-400">
+                        {new Date(notif.createdAt).toLocaleString()}
+                      </small>
+                    </div>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
         </section>
       </main>
       <Footer />
     </>
   );
-};
-
-export default NotifikasiPage;
+}

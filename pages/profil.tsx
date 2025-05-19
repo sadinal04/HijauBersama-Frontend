@@ -20,6 +20,7 @@ const ProfilePage = () => {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Inisialisasi profile dan form
   const [profile, setProfile] = useState({
     name: "",
     email: "",
@@ -30,7 +31,10 @@ const ProfilePage = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+  // Ambil userData dari localStorage (berisi token dan user info)
+  const userDataRaw = typeof window !== "undefined" ? localStorage.getItem("userData") : null;
+  const userData = userDataRaw ? JSON.parse(userDataRaw) : null;
+  const token = userData?.token || null;
 
   useEffect(() => {
     if (!token) {
@@ -45,7 +49,7 @@ const ProfilePage = () => {
         });
 
         if (res.status === 401) {
-          localStorage.removeItem("token");
+          localStorage.removeItem("userData");
           router.push("/login");
           return;
         }
@@ -122,7 +126,7 @@ const ProfilePage = () => {
   // Logout dengan konfirmasi browser biasa
   const handleLogout = () => {
     if (window.confirm("Apakah Anda yakin ingin keluar?")) {
-      localStorage.removeItem("token");
+      localStorage.removeItem("userData");
       router.push("/login");
     }
   };

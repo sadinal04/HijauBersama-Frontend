@@ -31,17 +31,23 @@ export default function LoginPage() {
         return;
       }
 
-      // Simpan token untuk otentikasi
-      localStorage.setItem("token", data.token);
-
-      // Simpan nama user untuk digunakan di forum dan halaman lain
-      localStorage.setItem("userName", data.user.name);
+      localStorage.setItem("userData", JSON.stringify({
+        id: data.user._id,
+        token: data.token,
+        name: data.user.name,
+        email: data.user.email
+      }));
 
       // Redirect ke halaman utama
       router.push("/");
     } catch (error) {
       alert("Terjadi kesalahan jaringan.");
     }
+  };
+
+  const handleGuestAccess = () => {
+    // Akses sebagai tamu, langsung menuju beranda
+    router.push("/");
   };
 
   return (
@@ -91,6 +97,14 @@ export default function LoginPage() {
             Daftar di sini
           </Link>
         </p>
+
+        {/* Tombol akses sebagai tamu */}
+        <button
+          onClick={handleGuestAccess}
+          className="w-full mt-4 bg-gray-300 text-[#006A71] py-2 rounded-md hover:bg-gray-400 transition font-semibold shadow-sm"
+        >
+          Akses Sebagai Tamu
+        </button>
       </motion.div>
     </main>
   );
