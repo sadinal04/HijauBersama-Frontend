@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import AdminSidebar from "@/components/AdminSidebar";
 import { MdEdit, MdDelete } from "react-icons/md";
 
@@ -12,12 +13,20 @@ type Challenge = {
 };
 
 export default function KelolaTantangan() {
+  const router = useRouter();
   const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [loading, setLoading] = useState(false);
-
   const [form, setForm] = useState({ judul: "", deskripsi: "", benefit: "" });
   const [editingId, setEditingId] = useState<string | null>(null);
   const [error, setError] = useState("");
+
+  // ⛔ Proteksi akses admin (harus login)
+  useEffect(() => {
+    const storedAdmin = localStorage.getItem("adminData");
+    if (!storedAdmin) {
+      router.push("/admin/login");
+    }
+  }, [router]);
 
   const fetchChallenges = async () => {
     setLoading(true);

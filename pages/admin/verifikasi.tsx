@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation"; // ⬅️ Tambahkan ini
 import AdminSidebar from "@/components/AdminSidebar";
 
 type Submission = {
@@ -25,6 +26,7 @@ type Challenge = {
 };
 
 export default function AdminVerifikasi() {
+  const router = useRouter(); // ⬅️ Tambahkan ini untuk redirect
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [loadingSubs, setLoadingSubs] = useState(true);
@@ -32,6 +34,14 @@ export default function AdminVerifikasi() {
   const [errorSubs, setErrorSubs] = useState("");
   const [errorChallenges, setErrorChallenges] = useState("");
   const [filterChallengeId, setFilterChallengeId] = useState<string>("");
+
+  // ⛔ Proteksi login
+  useEffect(() => {
+    const storedAdmin = localStorage.getItem("adminData");
+    if (!storedAdmin) {
+      router.push("/admin/login");
+    }
+  }, [router]);
 
   const fetchChallenges = async () => {
     setLoadingChallenges(true);
@@ -92,7 +102,6 @@ export default function AdminVerifikasi() {
     }
   };
 
-  // Filter submissions by challenge ID
   const filteredSubs = filterChallengeId
     ? submissions.filter((sub) =>
         typeof sub.challengeId === "object"
@@ -137,7 +146,7 @@ export default function AdminVerifikasi() {
           )}
         </div>
 
-        {/* Loading / Error for submissions */}
+        {/* Loading / Error / List Submissions */}
         {loadingSubs ? (
           <p className="text-[#006A71] text-lg">Memuat submissions...</p>
         ) : errorSubs ? (

@@ -28,7 +28,7 @@ export default function AdminSidebar() {
 
   // Menu items
   const menuItems = [
-    { label: "Dashboard", icon: <MdDashboard size={24} />, path: "/admin/dashboard" },
+    { label: "Dashboard", icon: <MdDashboard size={24} />, path: "/admin/" },
     { label: "Kelola Edukasi", icon: <MdSchool size={24} />, path: "/admin/kelola-edukasi" },
     { label: "Kelola Tantangan", icon: <MdFlag size={24} />, path: "/admin/kelola-tantangan" },
     { label: "Verifikasi", icon: <MdCheckCircle size={24} />, path: "/admin/verifikasi" }, // Fitur verifikasi
