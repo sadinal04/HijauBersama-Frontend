@@ -51,7 +51,7 @@ export default function DetailTantangan() {
 
     async function fetchDetail() {
       try {
-        const res = await fetch(`http://localhost:5000/api/challenges/${challengeId}`);
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/challenges/${challengeId}`);
         if (!res.ok) throw new Error("Tantangan tidak ditemukan");
         const data = await res.json();
         setChallenge(data);
@@ -105,7 +105,7 @@ export default function DetailTantangan() {
     setUploadSuccess("");
 
     try {
-      const res = await fetch("http://localhost:5000/api/submissions", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/submissions`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
