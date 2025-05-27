@@ -259,12 +259,12 @@ export default function Forum() {
                   {post.replies.length > 0 && (
                     <div className="mt-4 space-y-2 border-t pt-3">
                       {post.replies.map((reply, i) => (
-                        <div
-                          key={i}
-                          className="text-xs text-gray-500 mt-1"
-                        >
-                          Oleh: <strong>{typeof reply.author === "string" ? reply.author : reply.author?.name ?? "Unknown"}</strong> •{" "}
-                          {new Date(reply.waktu).toLocaleString()}
+                        <div key={i} className="bg-gray-50 p-3 rounded-md border text-sm text-gray-700 mb-2">
+                          <p className="mb-1 whitespace-pre-wrap">{reply.isi}</p>
+                          <div className="text-xs text-gray-500">
+                            Oleh: <strong>{typeof reply.author === "string" ? reply.author : reply.author?.name ?? "Unknown"}</strong> •{" "}
+                            {new Date(reply.waktu).toLocaleString()}
+                          </div>
                         </div>
                       ))}
                     </div>
