@@ -4,7 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 
 export default function SertifikatPage() {
-  const { id } = useParams();
+  const params = useParams();
+  const id = params?.id;
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [loading, setLoading] = useState(true);
   const [submission, setSubmission] = useState<any>(null);
