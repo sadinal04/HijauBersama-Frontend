@@ -31,7 +31,7 @@ export default function KelolaTantangan() {
   const fetchChallenges = async () => {
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:5000/api/admin/challenges");
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/challenges`);
       const data = await res.json();
       setChallenges(data);
     } catch {
@@ -61,8 +61,8 @@ export default function KelolaTantangan() {
     try {
       const method = editingId ? "PUT" : "POST";
       const url = editingId
-        ? `http://localhost:5000/api/admin/challenges/${editingId}`
-        : "http://localhost:5000/api/admin/challenges";
+        ? `${process.env.NEXT_PUBLIC_API_URL}api/admin/challenges/${editingId}`
+        : `${process.env.NEXT_PUBLIC_API_URL}/api/admin/challenges`;
 
       const res = await fetch(url, {
         method,
@@ -93,7 +93,7 @@ export default function KelolaTantangan() {
     if (!confirm("Hapus tantangan ini?")) return;
 
     try {
-      const res = await fetch(`http://localhost:5000/api/admin/challenges/${id}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/challenges/${id}`, {
         method: "DELETE",
       });
       if (!res.ok) throw new Error("Gagal menghapus");

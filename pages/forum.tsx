@@ -56,7 +56,7 @@ export default function Forum() {
     setLoading(true);
     try {
       const res = await fetch(
-        `http://localhost:5000/api/forum?page=${pageNum}&limit=10&search=${encodeURIComponent(searchTerm)}`
+        `${process.env.NEXT_PUBLIC_API_URL}api/forum?page=${pageNum}&limit=10&search=${encodeURIComponent(searchTerm)}`
       );
       const data = await res.json();
       setPosts(data.posts);
@@ -81,7 +81,7 @@ export default function Forum() {
     if (input.trim() === "") return;
 
     try {
-      const res = await fetch("http://localhost:5000/api/forum", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/forum`, {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
@@ -122,7 +122,7 @@ export default function Forum() {
     if (!replyText || replyText.trim() === "") return;
 
     try {
-      const res = await fetch(`http://localhost:5000/api/forum/${postId}/replies`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}api/forum/${postId}/replies`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -47,7 +47,7 @@ export default function AdminVerifikasi() {
     setLoadingChallenges(true);
     setErrorChallenges("");
     try {
-      const res = await fetch("http://localhost:5000/api/admin/challenges");
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/challenges`);
       if (!res.ok) throw new Error("Gagal memuat tantangan");
       const data = await res.json();
       setChallenges(data);
@@ -62,7 +62,7 @@ export default function AdminVerifikasi() {
     setLoadingSubs(true);
     setErrorSubs("");
     try {
-      const res = await fetch("http://localhost:5000/api/submissions");
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/submissions`);
       if (!res.ok) throw new Error("Gagal memuat submissions");
       const data = await res.json();
       setSubmissions(data);
@@ -107,7 +107,7 @@ export default function AdminVerifikasi() {
     if (!confirm("Verifikasi submission ini?")) return;
 
     try {
-      const res = await fetch(`http://localhost:5000/api/submissions/verify/${id}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/submissions/verify/${id}`, {
         method: "PUT",
       });
       if (!res.ok) {
