@@ -62,7 +62,7 @@ export default function AdminVerifikasi() {
     setLoadingSubs(true);
     setErrorSubs("");
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}:5000/api/submissions`);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/submissions`);
       if (!res.ok) throw new Error("Gagal memuat submissions");
       const data = await res.json();
       setSubmissions(data);
