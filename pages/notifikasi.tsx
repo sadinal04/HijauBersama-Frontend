@@ -25,7 +25,7 @@ export default function NotifikasiPage() {
       const token = userData ? JSON.parse(userData).token : null;
       if (!token) throw new Error("Harap login terlebih dahulu.");
 
-      const res = await fetch("http://localhost:5000/api/user/notifications", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/user/notifications`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -61,7 +61,7 @@ export default function NotifikasiPage() {
       const token = userData ? JSON.parse(userData).token : null;
       if (!token) throw new Error("Harap login terlebih dahulu.");
 
-      const res = await fetch(`http://localhost:5000/api/user/notifications/${id}/read`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/user/notifications/${id}/read`, {
         method: "PUT",
         headers: { Authorization: `Bearer ${token}` },
       });

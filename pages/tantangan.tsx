@@ -20,7 +20,7 @@ export default function DaftarTantangan() {
   useEffect(() => {
     const fetchTantangan = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/challenges");
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/challenges`);
         const data = await res.json();
         setTantanganList(data);
       } catch (error) {

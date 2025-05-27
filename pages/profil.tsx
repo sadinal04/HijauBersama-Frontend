@@ -91,7 +91,7 @@ const ProfilePage = () => {
 
     const fetchProfile = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/user/profile", {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/user/profile`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -139,7 +139,7 @@ const ProfilePage = () => {
 
     const fetchUserPosts = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/gallery/user", {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/gallery/user`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -185,7 +185,7 @@ const ProfilePage = () => {
     }
 
     try {
-      const res = await fetch("http://localhost:5000/api/user/profile", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/user/profile`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -246,7 +246,7 @@ const ProfilePage = () => {
 
     try {
       setDeletingPostId(postId);
-      const res = await fetch(`http://localhost:5000/api/gallery/${postId}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/gallery/${postId}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });

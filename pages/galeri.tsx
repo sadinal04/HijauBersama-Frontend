@@ -47,7 +47,7 @@ export default function GaleriPage() {
     if (!token) return;
 
     try {
-      const res = await fetch("http://localhost:5000/api/gallery", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/gallery`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error("Gagal memuat galeri");
@@ -70,7 +70,7 @@ export default function GaleriPage() {
     }
 
     try {
-      const res = await fetch(`http://localhost:5000/api/gallery/${postId}/like`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/gallery/${postId}/like`, {
         method: "PUT",
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -99,7 +99,7 @@ export default function GaleriPage() {
     }
 
     try {
-      const res = await fetch(`http://localhost:5000/api/gallery/${postId}/comments`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/gallery/${postId}/comments`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -155,7 +155,7 @@ export default function GaleriPage() {
     }
 
     try {
-      const res = await fetch("http://localhost:5000/api/gallery", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/gallery`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

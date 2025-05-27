@@ -20,7 +20,7 @@ export default function SertifikatPage() {
         const token = JSON.parse(userData).token;
         if (!token) throw new Error("Harap login terlebih dahulu.");
 
-        const res = await fetch(`http://localhost:5000/api/submissions/${id}`, {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/submissions/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 

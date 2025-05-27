@@ -61,7 +61,7 @@ export default function KelolaTantangan() {
     try {
       const method = editingId ? "PUT" : "POST";
       const url = editingId
-        ? `${process.env.NEXT_PUBLIC_API_URL}api/admin/challenges/${editingId}`
+        ? `${process.env.NEXT_PUBLIC_API_URL}/api/admin/challenges/${editingId}`
         : `${process.env.NEXT_PUBLIC_API_URL}/api/admin/challenges`;
 
       const res = await fetch(url, {
