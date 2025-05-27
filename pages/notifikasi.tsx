@@ -10,7 +10,7 @@ type Notification = {
   message: string;
   link: string;
   createdAt: string;
-  read?: boolean;
+  read: boolean;
 };
 
 export default function NotifikasiPage() {
@@ -18,52 +18,66 @@ export default function NotifikasiPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    const fetchNotifications = async () => {
-      try {
-        const userData = localStorage.getItem("userData");
-        const token = userData ? JSON.parse(userData).token : null;
+  // Fungsi untuk fetch notifikasi
+  const fetchNotifications = async () => {
+    try {
+      const userData = localStorage.getItem("userData");
+      const token = userData ? JSON.parse(userData).token : null;
+      if (!token) throw new Error("Harap login terlebih dahulu.");
 
-        if (!token) throw new Error("Harap login terlebih dahulu.");
+      const res = await fetch("http://localhost:5000/api/user/notifications", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-        const res = await fetch("http://localhost:5000/api/user/notifications", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        // Cek apakah response berformat JSON
-        const contentType = res.headers.get("content-type");
-        if (!res.ok) {
-          if (contentType && contentType.includes("application/json")) {
-            const data = await res.json();
-            throw new Error(data.message || "Gagal memuat notifikasi");
-          } else {
-            // Jika bukan JSON, tampilkan teks sebagai error
-            const text = await res.text();
-            throw new Error(text || "Gagal memuat notifikasi (bukan JSON)");
-          }
-        }
-
-        if (!contentType || !contentType.includes("application/json")) {
-          throw new Error("Response bukan JSON");
-        }
-
-        const data = await res.json();
-
-        // Mengurutkan notifikasi berdasarkan 'createdAt' terbaru
-        const sortedNotifications = data.sort(
-          (a: Notification, b: Notification) =>
-            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        );
-        setNotifications(sortedNotifications);
-      } catch (err: any) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.message || "Gagal memuat notifikasi");
       }
-    };
 
+      const data = await res.json();
+
+      // Urutkan terbaru di atas
+      const sorted = data.sort(
+        (a: Notification, b: Notification) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+
+      setNotifications(sorted);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchNotifications();
   }, []);
+
+  // Fungsi mark as read
+  const markAsRead = async (id: string) => {
+    try {
+      const userData = localStorage.getItem("userData");
+      const token = userData ? JSON.parse(userData).token : null;
+      if (!token) throw new Error("Harap login terlebih dahulu.");
+
+      const res = await fetch(`http://localhost:5000/api/user/notifications/${id}/read`, {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!res.ok) throw new Error("Gagal menandai notifikasi sebagai sudah dibaca");
+
+      // Update state lokal agar UI responsif
+      setNotifications((prev) =>
+        prev.map((notif) =>
+          notif._id === id ? { ...notif, read: true } : notif
+        )
+      );
+    } catch (err: any) {
+      alert(err.message || "Terjadi kesalahan saat menandai notifikasi");
+    }
+  };
 
   if (loading)
     return (
@@ -90,9 +104,23 @@ export default function NotifikasiPage() {
           ) : (
             <ul className="flex flex-col gap-4">
               {notifications.map((notif) => (
-                <li key={notif._id}>
+                <li
+                  key={notif._id}
+                  className="relative cursor-pointer"
+                  onClick={() => {
+                    if (!notif.read) markAsRead(notif._id);
+                  }}
+                >
                   <Link href={notif.link}>
-                    <div className="p-4 bg-[#E1F1F2] border border-[#cde3e5] rounded-xl shadow-sm hover:bg-[#d8edee] cursor-pointer">
+                    <div
+                      className={`p-4 border rounded-xl shadow-sm hover:bg-[#d8edee] ${
+                        notif.read ? "bg-[#E1F1F2]" : "bg-yellow-100 border-yellow-400"
+                      }`}
+                    >
+                      {!notif.read && (
+                        <span className="absolute top-3 right-3 w-3 h-3 bg-red-500 rounded-full" />
+                      )}
+
                       <p className="text-[#003D40] text-base sm:text-lg leading-relaxed">
                         {notif.message}
                       </p>

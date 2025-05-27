@@ -5,9 +5,14 @@ import { motion } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
+type UserRef = {
+  _id: string;
+  name: string;
+};
+
 type Reply = {
   isi: string;
-  author: string;
+  author: string | UserRef;
   waktu: string;
 };
 
@@ -15,7 +20,7 @@ type Post = {
   _id: string;
   judul: string;
   isi: string;
-  author: string;
+  author: string | UserRef;
   waktu: string;
   replies: Reply[];
 };
@@ -30,9 +35,22 @@ export default function Forum() {
   const [totalPosts, setTotalPosts] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(false);
 
-  // Ambil username dari localStorage, fallback ke default jika tidak ada
-  const userName = typeof window !== "undefined" ? localStorage.getItem("userName") : null;
-  const authorName = userName || "Pengguna Tidak Diketahui";
+  // Ambil userData dari localStorage sekaligus ambil token dan userName dari sana
+  const [token, setToken] = useState<string | null>(null);
+  const [userName, setUserName] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const userDataRaw = localStorage.getItem("userData");
+      if (userDataRaw) {
+        const userData = JSON.parse(userDataRaw);
+        setToken(userData.token || null);
+        setUserName(userData.name || null);
+      }
+    }
+  }, []);
+
+  const isLoggedIn = !!token && !!userName;
 
   const fetchPosts = async (pageNum: number, searchTerm: string) => {
     setLoading(true);
@@ -55,18 +73,23 @@ export default function Forum() {
     fetchPosts(page, search);
   }, [page, search]);
 
-  // Submit postingan baru dan update langsung di state tanpa fetch ulang
   const handleAddPost = async () => {
+    if (!isLoggedIn) {
+      alert("Silakan login terlebih dahulu untuk berdiskusi.");
+      return;
+    }
     if (input.trim() === "") return;
 
     try {
       const res = await fetch("http://localhost:5000/api/forum", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({
           judul: input.length > 50 ? input.slice(0, 50) : input,
           isi: input,
-          author: authorName,
         }),
       });
 
@@ -81,28 +104,32 @@ export default function Forum() {
     }
   };
 
-  // Toggle textarea balasan post tertentu
   const toggleReply = (postId: string) => {
     setShowReply((prev) => ({ ...prev, [postId]: !prev[postId] }));
   };
 
-  // Update isi balasan yang diketik
   const handleReplyChange = (postId: string, value: string) => {
     setReplyInputs({ ...replyInputs, [postId]: value });
   };
 
-  // Submit balasan dan update langsung di state tanpa fetch ulang
   const handleReplySubmit = async (postId: string) => {
+    if (!isLoggedIn) {
+      alert("Silakan login terlebih dahulu untuk membalas.");
+      return;
+    }
+
     const replyText = replyInputs[postId];
     if (!replyText || replyText.trim() === "") return;
 
     try {
       const res = await fetch(`http://localhost:5000/api/forum/${postId}/replies`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({
           isi: replyText,
-          author: authorName,
         }),
       });
 
@@ -153,18 +180,24 @@ export default function Forum() {
             className="bg-white p-6 rounded-xl shadow-xl mb-10"
           >
             <h2 className="text-2xl font-semibold text-[#006A71] mb-4">Bagikan Pengalaman Anda</h2>
-            <textarea
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              className="w-full h-32 p-4 border-2 border-[#9ACBD0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#48A6A7] mb-4 placeholder-[#5C7C7D] text-[#5C7C7D]"
-              placeholder="Tulis pengalaman atau pertanyaan Anda di sini..."
-            />
-            <button
-              onClick={handleAddPost}
-              className="bg-[#006A71] text-white px-6 py-2 rounded-lg hover:bg-[#48A6A7] transition-colors"
-            >
-              Kirim Pengalaman
-            </button>
+            {!isLoggedIn ? (
+              <p className="text-center text-red-600 mb-4">Silakan login terlebih dahulu untuk berdiskusi.</p>
+            ) : (
+              <>
+                <textarea
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  className="w-full h-32 p-4 border-2 border-[#9ACBD0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#48A6A7] mb-4 placeholder-[#5C7C7D] text-[#5C7C7D]"
+                  placeholder="Tulis pengalaman atau pertanyaan Anda di sini..."
+                />
+                <button
+                  onClick={handleAddPost}
+                  className="bg-[#006A71] text-white px-6 py-2 rounded-lg hover:bg-[#48A6A7] transition-colors"
+                >
+                  Kirim Pengalaman
+                </button>
+              </>
+            )}
           </motion.div>
 
           <div className="space-y-6">
@@ -187,7 +220,7 @@ export default function Forum() {
                   <p className="text-gray-700 mt-2 whitespace-pre-wrap">{post.isi}</p>
                   <div className="mt-4 flex items-center space-x-4 text-sm text-gray-500">
                     <span>
-                      Oleh: <strong>{post.author}</strong>
+                      Oleh: <strong>{typeof post.author === "string" ? post.author : post.author?.name ?? "Unknown"}</strong>
                     </span>
                     <span>•</span>
                     <span>{new Date(post.waktu).toLocaleString()}</span>
@@ -202,18 +235,24 @@ export default function Forum() {
 
                   {showReply[post._id] && (
                     <div className="mt-3">
-                      <textarea
-                        value={replyInputs[post._id] || ""}
-                        onChange={(e) => handleReplyChange(post._id, e.target.value)}
-                        placeholder="Tulis balasan Anda..."
-                        className="w-full h-24 p-3 border-2 border-[#9ACBD0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#48A6A7] mb-4 placeholder-[#5C7C7D] text-[#5C7C7D]"
-                      />
-                      <button
-                        onClick={() => handleReplySubmit(post._id)}
-                        className="bg-[#48A6A7] text-white px-4 py-1 rounded text-sm hover:bg-[#35999C]"
-                      >
-                        Kirim
-                      </button>
+                      {!isLoggedIn ? (
+                        <p className="text-red-600 mb-2">Silakan login terlebih dahulu untuk membalas.</p>
+                      ) : (
+                        <>
+                          <textarea
+                            value={replyInputs[post._id] || ""}
+                            onChange={(e) => handleReplyChange(post._id, e.target.value)}
+                            placeholder="Tulis balasan Anda..."
+                            className="w-full h-24 p-3 border-2 border-[#9ACBD0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#48A6A7] mb-4 placeholder-[#5C7C7D] text-[#5C7C7D]"
+                          />
+                          <button
+                            onClick={() => handleReplySubmit(post._id)}
+                            className="bg-[#48A6A7] text-white px-4 py-1 rounded text-sm hover:bg-[#35999C]"
+                          >
+                            Kirim
+                          </button>
+                        </>
+                      )}
                     </div>
                   )}
 
@@ -222,13 +261,10 @@ export default function Forum() {
                       {post.replies.map((reply, i) => (
                         <div
                           key={i}
-                          className="text-sm bg-[#F5F7F7] p-3 rounded-md text-gray-800 whitespace-pre-wrap"
+                          className="text-xs text-gray-500 mt-1"
                         >
-                          <p>{reply.isi}</p>
-                          <div className="text-xs text-gray-500 mt-1">
-                            Oleh: <strong>{reply.author}</strong> •{" "}
-                            {new Date(reply.waktu).toLocaleString()}
-                          </div>
+                          Oleh: <strong>{typeof reply.author === "string" ? reply.author : reply.author?.name ?? "Unknown"}</strong> •{" "}
+                          {new Date(reply.waktu).toLocaleString()}
                         </div>
                       ))}
                     </div>

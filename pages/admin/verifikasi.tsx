@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation"; // ⬅️ Tambahkan ini
+import { useRouter } from "next/navigation";
 import AdminSidebar from "@/components/AdminSidebar";
 
 type Submission = {
@@ -26,7 +26,7 @@ type Challenge = {
 };
 
 export default function AdminVerifikasi() {
-  const router = useRouter(); // ⬅️ Tambahkan ini untuk redirect
+  const router = useRouter();
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [loadingSubs, setLoadingSubs] = useState(true);
@@ -35,7 +35,7 @@ export default function AdminVerifikasi() {
   const [errorChallenges, setErrorChallenges] = useState("");
   const [filterChallengeId, setFilterChallengeId] = useState<string>("");
 
-  // ⛔ Proteksi login
+  // Proteksi login
   useEffect(() => {
     const storedAdmin = localStorage.getItem("adminData");
     if (!storedAdmin) {
@@ -78,6 +78,31 @@ export default function AdminVerifikasi() {
     fetchSubmissions();
   }, []);
 
+  // Filter submissions hanya yang challengeId valid
+  // Dan jika filterChallengeId aktif, filter juga berdasarkan itu
+  const filteredSubs = (() => {
+    if (loadingSubs || loadingChallenges) return [];
+  
+    const validChallengeIds = new Set(challenges.map((ch) => ch._id));
+  
+    // Pastikan challengeId bukan null dan bertipe objek
+    let filtered = submissions.filter((sub) =>
+      typeof sub.challengeId === "object" && sub.challengeId !== null
+        ? validChallengeIds.has(sub.challengeId._id)
+        : false
+    );
+  
+    if (filterChallengeId) {
+      filtered = filtered.filter((sub) =>
+        typeof sub.challengeId === "object" && sub.challengeId !== null
+          ? sub.challengeId._id === filterChallengeId
+          : false
+      );
+    }
+  
+    return filtered;
+  })();  
+
   const handleVerify = async (id: string) => {
     if (!confirm("Verifikasi submission ini?")) return;
 
@@ -101,14 +126,6 @@ export default function AdminVerifikasi() {
       alert(err.message || "Gagal verifikasi");
     }
   };
-
-  const filteredSubs = filterChallengeId
-    ? submissions.filter((sub) =>
-        typeof sub.challengeId === "object"
-          ? sub.challengeId._id === filterChallengeId
-          : false
-      )
-    : submissions;
 
   return (
     <div className="flex min-h-screen bg-[#F2EFE7]">

@@ -31,12 +31,17 @@ export default function LoginPage() {
         return;
       }
 
-      localStorage.setItem("userData", JSON.stringify({
-        id: data.user._id,
-        token: data.token,
-        name: data.user.name,
-        email: data.user.email
-      }));
+      localStorage.setItem(
+        "userData",
+        JSON.stringify({
+          id: data.user._id,
+          token: data.token,      // Simpan token di sini juga
+          name: data.user.name,
+          email: data.user.email,
+          bio: data.user.bio,
+          profilePhoto: data.user.profilePhoto || "", // jika ada default
+        })
+      );
 
       // Redirect ke halaman utama
       router.push("/");

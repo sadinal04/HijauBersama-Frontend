@@ -16,29 +16,76 @@ const toBase64 = (file: File): Promise<string> =>
     reader.onerror = (error) => reject(error);
   });
 
+interface Post {
+  _id: string;
+  caption: string;
+  imageUrl: string;
+  likes: string[];
+  comments: any[];
+}
+
 const ProfilePage = () => {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Inisialisasi profile dan form
   const [profile, setProfile] = useState({
     name: "",
     email: "",
     bio: "",
     profilePhoto: "",
   });
+
   const [form, setForm] = useState(profile);
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Ambil userData dari localStorage (berisi token dan user info)
-  const userDataRaw = typeof window !== "undefined" ? localStorage.getItem("userData") : null;
-  const userData = userDataRaw ? JSON.parse(userDataRaw) : null;
-  const token = userData?.token || null;
+  const [token, setToken] = useState<string | null>(null);
+  const [userData, setUserData] = useState<{
+    name?: string;
+    email?: string;
+    bio?: string;
+    profilePhoto?: string;
+    token?: string;
+    id?: string;
+  } | null>(null);
 
+  // State untuk posts user
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [postsLoading, setPostsLoading] = useState(true);
+
+  // State untuk menandai postingan yang sedang dihapus
+  const [deletingPostId, setDeletingPostId] = useState<string | null>(null);
+
+  // Ambil data user dari localStorage saat mount
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const storedUserData = localStorage.getItem("userData");
+      if (storedUserData) {
+        const parsed = JSON.parse(storedUserData);
+        setUserData(parsed);
+        setToken(parsed.token || null);
+        setProfile({
+          name: parsed.name || "",
+          email: parsed.email || "",
+          bio: parsed.bio || "",
+          profilePhoto: parsed.profilePhoto || "",
+        });
+        setForm({
+          name: parsed.name || "",
+          email: parsed.email || "",
+          bio: parsed.bio || "",
+          profilePhoto: parsed.profilePhoto || "",
+        });
+      } else {
+        router.push("/login");
+      }
+    }
+  }, [router]);
+
+  // Fetch profil user terbaru
   useEffect(() => {
     if (!token) {
-      router.push("/login");
+      setLoading(false);
       return;
     }
 
@@ -59,8 +106,21 @@ const ProfilePage = () => {
         const data = await res.json();
         setProfile(data);
         setForm(data);
+
+        localStorage.setItem(
+          "userData",
+          JSON.stringify({
+            ...userData,
+            name: data.name,
+            email: data.email,
+            bio: data.bio,
+            profilePhoto: data.profilePhoto || "",
+            token,
+          })
+        );
       } catch {
         alert("Gagal mengambil data profil. Silakan login ulang.");
+        localStorage.removeItem("userData");
         router.push("/login");
       } finally {
         setLoading(false);
@@ -68,7 +128,39 @@ const ProfilePage = () => {
     };
 
     fetchProfile();
-  }, [token, router]);
+  }, [token, router, userData]);
+
+  // Fetch postingan user
+  useEffect(() => {
+    if (!token) {
+      setPostsLoading(false);
+      return;
+    }
+
+    const fetchUserPosts = async () => {
+      try {
+        const res = await fetch("http://localhost:5000/api/gallery/user", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (!res.ok) {
+          alert("Gagal mengambil postingan user");
+          setPostsLoading(false);
+          return;
+        }
+
+        const data = await res.json();
+        console.log("Fetched user posts:", data);
+        setPosts(data);
+      } catch (error) {
+        alert("Gagal mengambil postingan user");
+      } finally {
+        setPostsLoading(false);
+      }
+    };
+
+    fetchUserPosts();
+  }, [token]);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -112,6 +204,18 @@ const ProfilePage = () => {
       setProfile(updatedProfile);
       setForm(updatedProfile);
       setIsEditing(false);
+
+      localStorage.setItem(
+        "userData",
+        JSON.stringify({
+          ...userData,
+          name: updatedProfile.name,
+          bio: updatedProfile.bio,
+          profilePhoto: updatedProfile.profilePhoto || "",
+          token,
+        })
+      );
+
       alert("Profil berhasil diperbarui");
     } catch {
       alert("Gagal memperbarui profil");
@@ -123,11 +227,37 @@ const ProfilePage = () => {
     setIsEditing(false);
   };
 
-  // Logout dengan konfirmasi browser biasa
   const handleLogout = () => {
     if (window.confirm("Apakah Anda yakin ingin keluar?")) {
       localStorage.removeItem("userData");
+      localStorage.removeItem("token");
       router.push("/login");
+    }
+  };
+
+  const handleDeletePost = async (postId: string) => {
+    if (!confirm("Apakah Anda yakin ingin menghapus postingan ini?")) return;
+
+    if (!token) {
+      alert("Silakan login terlebih dahulu");
+      router.push("/login");
+      return;
+    }
+
+    try {
+      setDeletingPostId(postId);
+      const res = await fetch(`http://localhost:5000/api/gallery/${postId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error("Gagal menghapus postingan");
+
+      setPosts((prev) => prev.filter((post) => post._id !== postId));
+      alert("Postingan berhasil dihapus");
+    } catch {
+      alert("Gagal menghapus postingan");
+    } finally {
+      setDeletingPostId(null);
     }
   };
 
@@ -161,7 +291,11 @@ const ProfilePage = () => {
             >
               {form.profilePhoto ? (
                 <img
-                  src={form.profilePhoto}
+                  src={
+                    form.profilePhoto.startsWith("data:")
+                      ? form.profilePhoto
+                      : `data:image/jpeg;base64,${form.profilePhoto}`
+                  }
                   alt="Foto Profil"
                   className="w-full h-full object-cover"
                 />
@@ -173,6 +307,7 @@ const ProfilePage = () => {
                   className="object-cover"
                 />
               )}
+
               {isEditing && (
                 <div className="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center rounded-full">
                   <FiCamera className="h-7 w-7 text-white" />
@@ -218,6 +353,40 @@ const ProfilePage = () => {
               className="w-full p-2 border rounded-md focus:outline-none text-[#006A71]"
               disabled={!isEditing}
             />
+          </div>
+
+          {/* Postingan Anda */}
+          <div className="mt-10 border-t pt-6">
+            <h3 className="text-xl font-semibold text-[#006A71] mb-4">Postingan Anda</h3>
+
+            {postsLoading ? (
+              <p>Memuat postingan...</p>
+            ) : posts.length === 0 ? (
+              <p>Anda belum memiliki postingan.</p>
+            ) : (
+              posts.map((post) => (
+                <div
+                  key={post._id}
+                  className="bg-gray-50 p-4 rounded-lg mb-4 flex flex-col md:flex-row md:items-center md:justify-between"
+                >
+                  <img
+                    src={post.imageUrl}
+                    alt={post.caption}
+                    className="w-full md:w-40 h-28 object-cover rounded-md mb-3 md:mb-0"
+                  />
+                  <div className="flex-1 md:ml-4">
+                    <p className="mb-2 text-gray-800">{post.caption}</p>
+                    <button
+                      onClick={() => handleDeletePost(post._id)}
+                      className="text-red-600 hover:underline text-sm"
+                      disabled={deletingPostId === post._id}
+                    >
+                      {deletingPostId === post._id ? "Menghapus..." : "Hapus Postingan"}
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
 
           {isEditing ? (

@@ -1,11 +1,55 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Menu, X, Bell } from "lucide-react";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [hasUnread, setHasUnread] = useState(false);
+
+  const fetchNotifications = async () => {
+    try {
+      const userData = localStorage.getItem("userData");
+      const token = userData ? JSON.parse(userData).token : null;
+      if (!token) {
+        setHasUnread(false);
+        return;
+      }
+
+      const res = await fetch("http://localhost:5000/api/user/notifications", {
+        headers: { Authorization: `Bearer ${token}` },
+        cache: "no-store", // pastikan tidak cache lama
+      });
+
+      if (!res.ok) {
+        setHasUnread(false);
+        return;
+      }
+
+      const notifications = await res.json();
+
+      // Cek ada notif yang belum dibaca
+      const unreadExists = notifications.some(
+        (notif: { read?: boolean }) => notif.read === false || notif.read === undefined
+      );
+
+      setHasUnread(unreadExists);
+    } catch (error) {
+      setHasUnread(false);
+    }
+  };
+
+  // Fetch saat mount, dan tiap 30 detik update ulang (polling sederhana)
+  useEffect(() => {
+    fetchNotifications();
+
+    const interval = setInterval(() => {
+      fetchNotifications();
+    }, 30000); // 30 detik
+
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <nav className="bg-[#006A71] text-white shadow-lg fixed top-0 left-0 w-full z-50 transition-all duration-300 ease-in-out">
@@ -32,10 +76,18 @@ const Navbar = () => {
             ))}
 
             {/* Notification Icon */}
-            <Link href="/notifikasi" className="relative text-[#F2EFE7] hover:text-[#9ACBD0] transition-all">
+            <Link
+              href="/notifikasi"
+              className="relative text-[#F2EFE7] hover:text-[#9ACBD0] transition-all"
+              aria-label="Notifikasi"
+            >
               <Bell size={22} />
-              <span className="absolute top-0 right-0 inline-block w-2 h-2 bg-red-500 rounded-full animate-ping"></span>
-              <span className="absolute top-0 right-0 inline-block w-2 h-2 bg-red-500 rounded-full"></span>
+              {hasUnread && (
+                <>
+                  <span className="absolute top-0 right-0 inline-block w-2 h-2 bg-red-500 rounded-full animate-ping"></span>
+                  <span className="absolute top-0 right-0 inline-block w-2 h-2 bg-red-500 rounded-full"></span>
+                </>
+              )}
             </Link>
 
             {/* Profile Icon */}
@@ -48,6 +100,7 @@ const Navbar = () => {
           <button
             className="md:hidden focus:outline-none text-[#F2EFE7]"
             onClick={() => setIsOpen(!isOpen)}
+            aria-label="Toggle menu"
           >
             {isOpen ? <X size={28} /> : <Menu size={28} />}
           </button>
@@ -72,10 +125,18 @@ const Navbar = () => {
           {/* Notification and Profile on Mobile */}
           <div className="flex items-center space-x-6 pt-2">
             {/* Notification */}
-            <Link href="/notifikasi" className="relative text-[#F2EFE7] hover:text-[#9ACBD0] transition-all">
+            <Link
+              href="/notifikasi"
+              className="relative text-[#F2EFE7] hover:text-[#9ACBD0] transition-all"
+              aria-label="Notifikasi"
+            >
               <Bell size={22} />
-              <span className="absolute top-0 right-0 inline-block w-2 h-2 bg-red-500 rounded-full animate-ping"></span>
-              <span className="absolute top-0 right-0 inline-block w-2 h-2 bg-red-500 rounded-full"></span>
+              {hasUnread && (
+                <>
+                  <span className="absolute top-0 right-0 inline-block w-2 h-2 bg-red-500 rounded-full animate-ping"></span>
+                  <span className="absolute top-0 right-0 inline-block w-2 h-2 bg-red-500 rounded-full"></span>
+                </>
+              )}
             </Link>
 
             {/* Profile */}

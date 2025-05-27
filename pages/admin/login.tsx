@@ -31,7 +31,7 @@ export default function AdminLoginPage() {
       localStorage.setItem("adminData", JSON.stringify(data));
 
       // Redirect ke dashboard admin
-      router.push("/admin/dashboard");
+      router.push("/admin");
     } catch {
       setError("Terjadi kesalahan jaringan.");
     }
