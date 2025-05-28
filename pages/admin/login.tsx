@@ -11,7 +11,11 @@ export default function AdminLoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
+
+    if (!email || !password) {
+      alert("Mohon isi email dan password!");
+      return;
+    }
 
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/auth/login`, {
@@ -23,19 +27,28 @@ export default function AdminLoginPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.message || "Login gagal");
+        alert(`Login gagal: ${data.message}`);
         return;
       }
 
-      // Simpan data admin di localStorage (tidak pakai token karena memang gak ada token)
-      localStorage.setItem("adminData", JSON.stringify(data));
+      // Simpan token dan data admin ke localStorage
+      localStorage.setItem(
+        "adminData",
+        JSON.stringify({
+          id: data.id,
+          token: data.token,    // Pastikan backend sudah kirim token ini
+          email: data.email,
+          name: data.name,
+        })
+      );
 
-      // Redirect ke dashboard admin
+      // Redirect ke halaman admin dashboard
       router.push("/admin");
     } catch {
-      setError("Terjadi kesalahan jaringan.");
+      alert("Terjadi kesalahan jaringan.");
     }
   };
+
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-[#F2EFE7] px-4">

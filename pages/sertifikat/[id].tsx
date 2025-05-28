@@ -1,11 +1,15 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
+import Navbar from "@/components/Navbar";
+import { FiArrowLeft } from "react-icons/fi";
 
 export default function SertifikatPage() {
   const params = useParams();
+  const router = useRouter();
   const id = params?.id;
+
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [loading, setLoading] = useState(true);
   const [submission, setSubmission] = useState<any>(null);
@@ -79,28 +83,56 @@ export default function SertifikatPage() {
 
     ctx.fillStyle = "#aaa";
     ctx.font = "16px Arial";
-    ctx.fillText("HijauBersama • " + new Date(submission.verifiedAt).toLocaleDateString(), canvas.width / 2, 380);
+    ctx.fillText(
+      "HijauBersama • " + new Date(submission.verifiedAt).toLocaleDateString(),
+      canvas.width / 2,
+      380
+    );
   }, [submission]);
 
   if (loading)
-    return <p className="text-center mt-20 text-[#006A71]">Memuat sertifikat...</p>;
+    return (
+      <>
+        <Navbar />
+        <main className="min-h-screen flex items-center justify-center bg-[#F2EFE7] pt-20 px-4">
+          <p className="text-[#006A71] text-xl">Memuat sertifikat...</p>
+        </main>
+      </>
+    );
 
   if (error)
-    return <p className="text-center mt-20 text-red-600">{error}</p>;
+    return (
+      <>
+        <Navbar />
+        <main className="min-h-screen flex items-center justify-center bg-[#F2EFE7] pt-20 px-4">
+          <p className="text-red-600 text-xl">{error}</p>
+        </main>
+      </>
+    );
 
   if (!submission) return null;
 
   return (
-    <div className="flex flex-col items-center gap-4 p-8 bg-[#F2EFE7] min-h-screen overflow-hidden">
-      <h1 className="text-xl font-bold text-[#006A71] mb-4">Preview Sertifikat</h1>
-      <canvas ref={canvasRef} width={800} height={500} className="shadow-lg border" />
-      <a
-        href={canvasRef.current?.toDataURL()}
-        download="sertifikat-hijaubersama.png"
-        className="bg-[#006A71] text-white px-6 py-2 rounded-full hover:bg-[#004B50] transition duration-300"
-      >
-        📥 Download Sertifikat
-      </a>
-    </div>
+    <>
+      <Navbar />
+      <main className="min-h-screen bg-[#F2EFE7] pt-20 px-4 flex flex-col items-center">
+        <h1 className="text-xl font-bold text-[#006A71] mb-4">Preview Sertifikat</h1>
+
+        <canvas
+          ref={canvasRef}
+          width={800}
+          height={500}
+          className="shadow-lg border rounded max-w-full"
+        />
+
+        <a
+          href={canvasRef.current?.toDataURL()}
+          download="sertifikat-hijaubersama.png"
+          className="bg-[#006A71] text-white px-6 py-2 rounded-full hover:bg-[#004B50] transition duration-300 mt-6"
+        >
+          📥 Download Sertifikat
+        </a>
+      </main>
+    </>
   );
 }
