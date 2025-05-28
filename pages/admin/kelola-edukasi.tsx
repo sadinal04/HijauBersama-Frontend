@@ -211,7 +211,7 @@ export default function KelolaEdukasi() {
                     <input
                         type="text"
                         placeholder="Judul Edukasi"
-                        className="w-full p-2 border border-gray-300 rounded mb-4"
+                        className="w-full p-2 border border-gray-300 rounded mb-4 text-[#5C7C7D] placeholder-[#5C7C7D]"
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
                     />
@@ -243,7 +243,7 @@ export default function KelolaEdukasi() {
                     {type === "artikel" && (
                         <textarea
                             placeholder="Isi artikel (HTML diperbolehkan)"
-                            className="w-full p-2 border border-gray-300 rounded mb-4 min-h-[100px]"
+                            className="w-full p-2 border border-gray-300 rounded mb-4 min-h-[100px] text-[#5C7C7D] placeholder-[#5C7C7D]"
                             value={content}
                             onChange={(e) => setContent(e.target.value)}
                         />
@@ -253,7 +253,7 @@ export default function KelolaEdukasi() {
                         <input
                             type="text"
                             placeholder="Link Video YouTube (contoh: https://www.youtube.com/watch?v=ID_VIDEO)"
-                            className="w-full p-2 border border-gray-300 rounded mb-4"
+                            className="w-full p-2 border border-gray-300 rounded mb-4 text-[#5C7C7D] placeholder-[#5C7C7D]"
                             value={videoUrl}
                             onChange={(e) => setVideoUrl(e.target.value)}
                         />
