@@ -52,3 +52,8 @@ git clone https://github.com/sadinal04/HijauBersama-Frontend.git
 cd HijauBersama-Frontend
 npm install
 npm run dev
+```
+
+### Anggota
+- Aulia Vika Rahman (2208107010001)
+- Sadinal Mufti (2208107010007)
